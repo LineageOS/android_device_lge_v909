@@ -37,8 +37,6 @@ TARGET_CPU_SMP := true
 #TARGET_HAVE_TEGRA_ERRATA_657451 := true
 ARCH_ARM_HAVE_TLS_REGISTER := true
 
-TARGET_SPECIFIC_HEADER_PATH := device/lge/v909/overlay/include
-
 # Custom Recovery UI Settings
 BOARD_CUSTOM_RECOVERY_KEYMAPPING := ../../device/lge/v909/recovery/recovery_ui.c
 
@@ -77,6 +75,7 @@ TARGET_KERNEL_CONFIG := cyanogenmod_startablet_defconfig
 BOARD_UMS_LUNFILE := /sys/devices/platform/usb_mass_storage/lun0/file
 
 BOARD_USES_HC_RADIO := true
+BOARD_USES_LEGACY_RIL := true
 
 # Wifi related defines
 WPA_SUPPLICANT_VERSION := VER_0_8_X
