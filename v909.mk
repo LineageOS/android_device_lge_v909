@@ -41,6 +41,10 @@ PRODUCT_PROPERTY_OVERRIDES := \
     wifi.interface=eth0 \
     wifi.supplicant_scan_interval=15
 
+# Bluetooth config file
+PRODUCT_COPY_FILES += \
+    system/bluetooth/data/main.nonsmartphone.conf:system/etc/bluetooth/main.conf \
+
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.camera.autofocus.xml:system/etc/permissions/android.hardware.camera.autofocus.xml \
     frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
@@ -73,6 +77,8 @@ PRODUCT_COPY_FILES += \
 ## LGE stuffs
 PRODUCT_PACKAGES += \
     LGEServices \
+    audio.a2dp.default \
+    audio.usb.default \
     audio.primary.startablet \
     libaudioutils \
     bridgeutil \
@@ -85,6 +91,9 @@ PRODUCT_PACKAGES += \
     screencap \
     hwprops \
     com.android.future.usb.accessory \
+    l2ping \
+    hcitool \
+    bttest \
     e2fsck \
     make_ext4fs \
     setup_fs
