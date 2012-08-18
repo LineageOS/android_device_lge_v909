@@ -50,6 +50,13 @@ struct route_setting
     char *strval;
 };
 
+enum {
+    ORIENTATION_LANDSCAPE,
+    ORIENTATION_PORTRAIT,
+    ORIENTATION_SQUARE,
+    ORIENTATION_UNDEFINED,
+};
+
 /* The enable flag when 0 makes the assumption that enums are disabled by
  * "Off" and integers/booleans by 0 */
 static int set_route_by_array(struct mixer *mixer, struct route_setting *route,
@@ -119,6 +126,7 @@ struct tiny_audio_device {
     int active_devices;
     int devices;
 
+    int orientation;
     bool mic_mute;
 };
 
@@ -299,6 +307,28 @@ static int out_standby(struct audio_stream *stream)
 static int out_dump(const struct audio_stream *stream, int fd)
 {
     return 0;
+}
+
+static int mixer_set_str_ctl(struct mixer *mixer, const char *name,
+                             const char *value)
+{
+    int ret = 0;
+
+    struct mixer_ctl *ctl = mixer_get_ctl_by_name(mixer, name);
+
+    if (!ctl) {
+        ALOGE("Unknown control '%s'\n", name);
+        return -EINVAL;
+    }
+
+    ret = mixer_ctl_set_enum_by_string(ctl, value);
+    if (ret != 0) {
+        ALOGE("Failed to set '%s' to '%s'\n", name, value);
+    } else {
+        ALOGV("Set '%s' to '%s'\n", name, value);
+    }
+
+    return ret;
 }
 
 static int out_set_parameters(struct audio_stream *stream, const char *kvpairs)
@@ -751,13 +781,57 @@ static void adev_close_output_stream(struct audio_hw_device *dev,
 
 static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
 {
-    return -ENOSYS;
+    struct tiny_audio_device *adev = (struct tiny_audio_device *)dev;
+    struct str_parms *parms;
+    char *str;
+    char value[32];
+    int ret;
+
+    ALOGV("%s: %s\n", __func__, kvpairs);
+
+    parms = str_parms_create_str(kvpairs);
+
+    ret = str_parms_get_str(parms, "orientation", value, sizeof(value));
+
+    if (ret >= 0) {
+        int orientation;
+
+        ALOGV("%s: orientation '%s'\n", __func__, value);
+
+        if (strcmp(value, "landscape") == 0)
+            orientation = ORIENTATION_LANDSCAPE;
+        else if (strcmp(value, "portrait") == 0)
+            orientation = ORIENTATION_PORTRAIT;
+        else if (strcmp(value, "square") == 0)
+            orientation = ORIENTATION_SQUARE;
+        else
+            orientation = ORIENTATION_UNDEFINED;
+
+        if (orientation != adev->orientation) {
+            adev->orientation = orientation;
+            if (adev->mixer) {
+                switch (adev->orientation) {
+                case ORIENTATION_PORTRAIT:
+                    ret = mixer_set_str_ctl(adev->mixer, "Speaker Orientation",
+                                            "Portrait");
+                    break;
+                case ORIENTATION_LANDSCAPE:
+                    ret = mixer_set_str_ctl(adev->mixer, "Speaker Orientation",
+                                            "Landscape");
+                    break;
+                }
+            }
+        }
+    }
+
+    str_parms_destroy(parms);
+    return ret;
 }
 
 static char * adev_get_parameters(const struct audio_hw_device *dev,
                                   const char *keys)
 {
-    return NULL;
+    return strdup("");
 }
 
 static int adev_init_check(const struct audio_hw_device *dev)

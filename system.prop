@@ -19,4 +19,6 @@ dalvik.vm.dexopt-flags=m=y,u=n
 # This appears to be causing "Unknown" network type
 #ro.telephony.default_network=0
 
+ro.audio.monitorOrientation=true
+
 ro.sf.lcd_density=160
