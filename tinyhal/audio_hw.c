@@ -156,6 +156,7 @@ struct tiny_stream_in {
 
     struct tiny_audio_device *adev;
 
+    struct audio_config req_config;
     struct pcm_config config;
     struct pcm *pcm;
 
@@ -163,7 +164,6 @@ struct tiny_stream_in {
     struct resampler_buffer_provider buf_provider;
     int16_t *buffer;
     size_t frames_in;
-    unsigned int requested_rate;
     int standby;
     int source;
     effect_handle_t preprocessors[MAX_PREPROCESSORS];
@@ -465,7 +465,7 @@ static uint32_t in_get_sample_rate(const struct audio_stream *stream)
 {
     struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
 
-    return in->requested_rate;
+    return in->req_config.sample_rate;
 }
 
 static int in_set_sample_rate(struct audio_stream *stream, uint32_t rate)
@@ -476,13 +476,8 @@ static int in_set_sample_rate(struct audio_stream *stream, uint32_t rate)
 static size_t in_get_buffer_size(const struct audio_stream *stream)
 {
     struct tiny_stream_in *in = (struct tiny_stream_in *)stream;
-    struct audio_config config;
 
-    config.sample_rate  = in->requested_rate;
-    config.format       = AUDIO_FORMAT_PCM_16_BIT;
-    config.channel_mask = (in->config.channels == 2) ? AUDIO_CHANNEL_IN_STEREO : AUDIO_CHANNEL_IN_MONO;
-
-    return get_input_buffer_size(&config);
+    return get_input_buffer_size(&in->req_config);
 }
 
 static uint32_t in_get_channels(const struct audio_stream *stream)
@@ -900,6 +895,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
 
     pthread_mutex_init(&in->lock, NULL);
     in->adev = adev;
+    in->req_config = *config;
 
     in->stream.common.get_sample_rate = in_get_sample_rate;
     in->stream.common.set_sample_rate = in_set_sample_rate;
@@ -936,12 +932,12 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
         goto err;
     }
 
-    if (in->requested_rate != in->config.rate) {
+    if (in->req_config.sample_rate != in->config.rate) {
         in->buf_provider.get_next_buffer = get_next_buffer;
         in->buf_provider.release_buffer = release_buffer;
 
         ret = create_resampler(in->config.rate,
-                               in->requested_rate,
+                               in->req_config.sample_rate,
                                in->config.channels,
                                RESAMPLER_QUALITY_DEFAULT,
                                &in->buf_provider,
