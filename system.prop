@@ -7,7 +7,6 @@ ro.ril.wake_lock_timeout=180000
 rild.libpath=/system/lib/lge-ril.so
 rild.libargs=-d /dev/ttyspi0
 sys.settings_system_version=2
-wifi.supplicant_scan_interval=15
 drm.service.enabled=1
 keyguard.no_require_sim=yes
 
