@@ -20,6 +20,7 @@ bin/pppd
 bin/recoveryd
 bin/wifihiddend
 bin/wl
+etc/enctune.conf
 etc/init.goldfish.sh
 etc/bluetooth/BCM4329B1_002.002.023.0875.0883.hcd
 etc/permissions/com.nvidia.display.xml
